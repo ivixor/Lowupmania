@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +25,7 @@ import com.vk.sdk.dialogs.VKCaptchaDialog;
 import com.vk.sdk.util.VKUtil;
 
 
-public class LoginActivity extends FragmentActivity {
+public class LoginActivity extends FragmentActivity implements LowupmaniaFragment.FooCallbacks, LogoutDialog.ResultListener {
 
     private static String appId = "4828248";
     private static String tokenKey = "VK_ACCESS_TOKEN";
@@ -54,13 +55,13 @@ public class LoginActivity extends FragmentActivity {
         public void onReceiveNewToken(VKAccessToken newToken) {
             Log.d("vk", "on receive token");
             newToken.saveTokenToSharedPreferences(LoginActivity.this, tokenKey);
-            startLowupmaniaActivity();
+            showLowupmania();
         }
 
         @Override
         public void onAcceptUserToken(VKAccessToken token) {
             Log.d("vk", "accept token");
-            startLowupmaniaActivity();
+            showLowupmania();
         }
     };
 
@@ -73,7 +74,8 @@ public class LoginActivity extends FragmentActivity {
         VKSdk.initialize(sdkListener, appId); // VKSdk.initialize(sdkListener, appId, VKAccessToken.tokenFromSharedPreferences(this, tokenKey));
 
         if (VKSdk.wakeUpSession()) {
-            startLowupmaniaActivity();
+            //startLowupmaniaActivity();
+            showLowupmania();
             return;
         }
 
@@ -98,32 +100,53 @@ public class LoginActivity extends FragmentActivity {
         VKUIHelper.onResume(this);
 
         if (VKSdk.isLoggedIn()) {
-            showLogout();
+            //showLogout();
+            showLowupmania();
         } else {
-            showLogin();
+            VKSdk.authorize(appScope);
         }
     }
 
-    private void startLowupmaniaActivity() {
-        startActivity(new Intent(this, LowupmaniaActivity.class));
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.lowupmania_actions, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
-    private void showLogin() {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_logout:
+                LogoutDialog logoutDialog = new LogoutDialog();
+                logoutDialog.show(getFragmentManager(), "Logout");
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
+    }
+
+    private void showLowupmania() {
         getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.container, new LoginFragment())
+                .replace(R.id.container, new LowupmaniaFragment())
                 .commit();
     }
 
-    private void showLogout() {
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.container, new LogoutFragment())
-                .commit();
+    @Override
+    public void foo() {
+
     }
 
+    @Override
+    public void onPositiveResult() {
+        VKSdk.logout();
+        finish();
+    }
 
-    public static class LoginFragment extends Fragment {
+    /*public static class LoginFragment extends Fragment {
         public LoginFragment() {
             super();
         }
@@ -151,9 +174,9 @@ public class LoginActivity extends FragmentActivity {
                 }
             });
         }
-    }
+    }*/
 
-    public static class LogoutFragment extends Fragment {
+    /*public static class LogoutFragment extends Fragment {
         public LogoutFragment() {
             super();
         }
@@ -174,7 +197,7 @@ public class LoginActivity extends FragmentActivity {
                 }
             });
 
-            getView().findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
+            getView().findViewById(R.id.ic_logout).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     VKSdk.logout();
@@ -184,5 +207,5 @@ public class LoginActivity extends FragmentActivity {
                 }
             });
         }
-    }
+    }*/
 }

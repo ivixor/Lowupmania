@@ -11,4 +11,8 @@
     <string name="action_sign_in_force">force</string>
     <string name="continue_using_app">continue</string>
     <string name="logout">logout</string>
+
+    <string name="get">get audio</string>
+    <string name="low">low it</string>
+    <string name="up">up it</string>
 </resources>
