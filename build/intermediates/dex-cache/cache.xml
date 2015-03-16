@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pre-dex-items>
+
+    <item
+        dex="D:\Documents\GitHub\Lowupmania\app\build\intermediates\pre-dexed\debug\internal_impl-20.0.0-198fabbb18624e6c1a5a3c3acaba3b68d05f3f4d.jar"
+        jar="D:\Documents\GitHub\Lowupmania\app\build\intermediates\exploded-aar\com.android.support\support-v4\20.0.0\libs\internal_impl-20.0.0.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="e40b3078e3fbd353c9f44da8df25a8fc0078209d"/>
+    <item
+        dex="D:\Documents\GitHub\Lowupmania\app\build\intermediates\pre-dexed\debug\classes-6eac0d66216e456ca67d3e08a533a8a24fdaf6e2.jar"
+        jar="D:\Documents\GitHub\Lowupmania\app\build\intermediates\exploded-aar\Lowupmania\vksdk_library\unspecified\classes.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="1d2dd20bc2eec013414e4d4e519b81e597643cb6"/>
+    <item
+        dex="D:\Documents\GitHub\Lowupmania\app\build\intermediates\pre-dexed\debug\classes-61b7b81ca9978f2e70d39f49a52c206a762c54e6.jar"
+        jar="D:\Documents\GitHub\Lowupmania\app\build\intermediates\exploded-aar\com.android.support\support-v4\20.0.0\classes.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="8694693636ab36910c8100ce527c258ff3ebece0"/>
+    <item
+        dex="D:\Documents\GitHub\Lowupmania\app\build\intermediates\pre-dexed\debug\support-annotations-20.0.0-27101c0fac7fa77295f5946beeff29ea7987b866.jar"
+        jar="C:\Users\jdoe\AppData\Local\Android\android-studio\sdk\extras\android\m2repository\com\android\support\support-annotations\20.0.0\support-annotations-20.0.0.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="9d9013e9ff35fc3756411e62873c363c70c638fa"/>
+
+</pre-dex-items>
