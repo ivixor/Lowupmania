@@ -18,7 +18,7 @@ public class AudiosJSONParser {
         this.audiosJson = json;
     }
 
-    public void parse() throws JSONException {
+    public List<Song> getAudios() throws JSONException {
 
         List<Song> songs = new ArrayList<Song>();
 
@@ -43,6 +43,8 @@ public class AudiosJSONParser {
         }
 
         Log.d("json", "" + songs.size());
+
+        return songs;
     }
 
     /*public List readJSONStream(String json) throws IOException {

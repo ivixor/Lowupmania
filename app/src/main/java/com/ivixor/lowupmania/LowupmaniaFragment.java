@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 
 public class LowupmaniaFragment extends Fragment {
@@ -34,16 +35,20 @@ public class LowupmaniaFragment extends Fragment {
     private VKRequest.VKRequestListener requestListener = new VKRequest.VKRequestListener() {
         @Override
         public void onComplete(VKResponse response) {
+            List<Song> audios = null;
+
             AudiosJSONParser parser = new AudiosJSONParser(response.json);
             try {
-                parser.parse();
+                audios = parser.getAudios();
             } catch (JSONException e) {
                 Log.d("json", e.getMessage());
             }
 
-            /*Intent intent = new Intent(getActivity(), LowupmaniaActivity.class);
-            intent.putExtra("result", result);
-            startActivity(intent);*/
+            if (audios != null) {
+                Intent intent = new Intent(getActivity(), AudiosListActivity.class);
+                intent.putExtra("songs", new DataWrapper(audios));
+                startActivity(intent);
+            }
         }
 
         @Override
@@ -91,6 +96,10 @@ public class LowupmaniaFragment extends Fragment {
         }
 
         callbacks = (FooCallbacks) activity;
+    }
+
+    public void sendRequest() {
+
     }
 
     @Override

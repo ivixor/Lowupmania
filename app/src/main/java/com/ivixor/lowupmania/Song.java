@@ -1,7 +1,9 @@
 package com.ivixor.lowupmania;
 
 
-public class Song {
+import java.io.Serializable;
+
+public class Song implements Serializable {
     private String id;
     private String ownerId;
     private String artist;
