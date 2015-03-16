@@ -1,19 +1,12 @@
 package com.ivixor.lowupmania;
 
 
-import android.os.Message;
-import android.util.JsonReader;
-import android.util.JsonToken;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,25 +19,30 @@ public class AudiosJSONParser {
     }
 
     public void parse() throws JSONException {
-        JSONObject response = audiosJson.getJSONObject("response");
-        Log.d("json", response.toString());
-        JSONArray items = response.getJSONArray("items");
-        Log.d("json", items.toString());
 
-        for (int i = 0; i < 10; i++) {
+        List<Song> songs = new ArrayList<Song>();
+
+        JSONObject response = audiosJson.getJSONObject("response");
+        JSONArray items = response.getJSONArray("items");
+
+        Log.d("json", "" + items.length());
+
+        for (int i = 0; i < items.length(); i++) {
             try {
                 JSONObject item = items.getJSONObject(i);
-                Audio audio = new Audio(
+                Song song = new Song(
                         item.getString("id"),
-                        item.getString("ownerId"),
+                        item.getString("owner_id"),
                         item.getString("artist"),
                         item.getString("title")
                 );
-
+                songs.add(i, song);
             } catch (JSONException e) {
-
+                e.printStackTrace();
             }
         }
+
+        Log.d("json", "" + songs.size());
     }
 
     /*public List readJSONStream(String json) throws IOException {
