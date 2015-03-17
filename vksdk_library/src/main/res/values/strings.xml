@@ -15,4 +15,6 @@
     <string name="get">get audio</string>
     <string name="low">low it</string>
     <string name="up">up it</string>
+
+    <string name="song_name"></string>
 </resources>
