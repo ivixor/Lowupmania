@@ -4,25 +4,19 @@ import android.app.ActionBar;
 import android.app.ListActivity;
 import android.app.LoaderManager;
 import android.content.Context;
-import android.content.CursorLoader;
-import android.content.Intent;
-import android.content.Loader;
-import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v4.util.SimpleArrayMap;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -34,6 +28,8 @@ public class AudiosListActivity extends ListActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        getActionBar().setDisplayHomeAsUpEnabled(true);
 
         DataWrapper dw = (DataWrapper) getIntent().getSerializableExtra("songs");
         songs = dw.getSongsData();
@@ -53,15 +49,17 @@ public class AudiosListActivity extends ListActivity {
         ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
         //root.addView(progressBar);
 
-        /*String[] fromColumns = { "audio" };
-        int[] toViews = { android.R.id.text1 };
+    }
 
-        mAdapter = new SimpleCursorAdapter(this,
-                android.R.layout.simple_list_item_1, null,
-                fromColumns, toViews, 0);
-        setListAdapter(mAdapter);
-
-        getLoaderManager().initLoader(0, null, this);*/
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // Respond to the action bar's Up/Home button
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -82,21 +80,30 @@ public class AudiosListActivity extends ListActivity {
 
     private class SongsArrayAdapter extends ArrayAdapter<Song> {
 
-        private HashMap<Song, Integer> mIdMap = new HashMap<Song, Integer>();
+        private class ViewHolder {
+            TextView songName;
+        }
 
         public SongsArrayAdapter(Context context, List<Song> objects) {
-            super(context, 0, objects);
+            super(context, R.layout.item_audio, objects);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             Song song = getItem(position);
 
+            ViewHolder viewHolder;
             if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_audio, parent, false);
+                viewHolder = new ViewHolder();
+                LayoutInflater inflater = LayoutInflater.from(getContext());
+                convertView = inflater.inflate(R.layout.item_audio, parent, false);
+                viewHolder.songName = (TextView) convertView.findViewById(R.id.tvAudioName);
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
             }
 
-            ((TextView) convertView.findViewById(R.id.audioName)).setText(song.getArtist() + " - " + song.getTitle());
+            viewHolder.songName.setText(song.getArtist() + " - " + song.getTitle());
 
             return convertView;
         }
