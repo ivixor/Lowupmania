@@ -36,18 +36,18 @@ public class AudiosListActivity extends ListActivity {
 
         mAdapter = new SongsArrayAdapter(this, songs);
 
-        /*ProgressBar progressBar = new ProgressBar(this);
+        ProgressBar progressBar = new ProgressBar(this);
         progressBar.setLayoutParams(new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         Gravity.CENTER)
         );
-        progressBar.setIndeterminate(true);*/
-        //getListView().setEmptyView(progressBar);
+        progressBar.setIndeterminate(true);
+        getListView().setEmptyView(progressBar);
         getListView().setAdapter(mAdapter);
 
         ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
-        //root.addView(progressBar);
+        root.addView(progressBar);
 
     }
 

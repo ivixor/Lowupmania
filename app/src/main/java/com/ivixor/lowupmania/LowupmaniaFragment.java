@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.VKApi;
@@ -19,9 +20,13 @@ import com.vk.sdk.api.VKError;
 import com.vk.sdk.api.VKParameters;
 import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
+import com.vk.sdk.api.methods.VKApiFriends;
+import com.vk.sdk.api.model.VKApiAudio;
+import com.vk.sdk.api.model.VKApiPhoto;
 import com.vk.sdk.util.VKUtil;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -30,43 +35,37 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 
-public class LowupmaniaFragment extends Fragment {
+public class LowupmaniaFragment extends Fragment implements EditAudiosAsyncTask.AsyncResponseListener {
 
-    private VKRequest.VKRequestListener requestListener = new VKRequest.VKRequestListener() {
+    private EditAudiosAsyncTask editAudiosAsyncTask;
+
+    private List<Song> audios;
+
+    private VKRequest.VKRequestListener getAudioRequestListener = new VKRequest.VKRequestListener() {
         @Override
         public void onComplete(VKResponse response) {
-            List<Song> audios = null;
-
-            AudiosJSONParser parser = new AudiosJSONParser(response.json);
-            try {
-                audios = parser.getAudios();
-            } catch (JSONException e) {
-                Log.d("json", e.getMessage());
-            }
-
-            if (audios != null) {
-                Intent intent = new Intent(getActivity(), AudiosListActivity.class);
-                intent.putExtra("songs", new DataWrapper(audios));
-                startActivity(intent);
+            if (response.request.methodName.equals("audio.get")) {
+                Log.d("get response", response.responseString);
+                audios = parseJSON(response.json);
             }
         }
 
         @Override
         public void onError(VKError error) {
-            Intent intent = new Intent(getActivity(), LowupmaniaActivity.class);
-            intent.putExtra("result", error.toString());
-            startActivityForResult(intent, 42);
+            Log.d("get response", error.errorMessage.toString());
         }
 
         @Override
         public void attemptFailed(VKRequest request, int attemptNumber, int totalAttempts) {
-            Intent intent = new Intent(getActivity(), LowupmaniaActivity.class);
-            intent.putExtra("result", request.response.toString());
-            startActivityForResult(intent, 42);
+            Log.d("get response", request.response.toString());
         }
     };
 
     public LowupmaniaFragment() {
+    }
+
+    @Override
+    public void processFinished() {
 
     }
 
@@ -90,45 +89,73 @@ public class LowupmaniaFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-
-        if (!(activity instanceof FooCallbacks)) {
-            throw new IllegalStateException("Activity must implement fragment's callbacks.");
-        }
-
-        callbacks = (FooCallbacks) activity;
-    }
-
-    public void sendRequest() {
-
+        editAudiosAsyncTask = new EditAudiosAsyncTask(activity);
+        editAudiosAsyncTask.delegate = this;
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        getView().findViewById(R.id.get_audio_button).setOnClickListener(new View.OnClickListener() {
+        getView().findViewById(R.id.button_get_audio).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final VKRequest request = new VKRequest("audio.get", VKParameters.from(VKApiConst.FIELDS, "id,owner_id,artist,title"));
-                //VKRequest request = new VKApi().users().get();
-                request.secure = false;
-                request.useSystemLanguage = false;
-                request.executeWithListener(requestListener);
+                getAudios();
+
+                if (audios != null) {
+                    Intent intent = new Intent(getActivity(), AudiosListActivity.class);
+                    intent.putExtra("songs", new DataWrapper(audios));
+                    startActivity(intent);
+                }
             }
         });
 
-        getView().findViewById(R.id.low_button).setOnClickListener(new View.OnClickListener() {
+        getView().findViewById(R.id.button_low).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (audios != null && !audios.isEmpty()) {
+                    editAudiosAsyncTask.execute(audios);
+                } else {
+                    Toast.makeText(getActivity(), "audio list is empty", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        getView().findViewById(R.id.button_up).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
             }
         });
+    }
 
-        getView().findViewById(R.id.up_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+    private List<Song> parseJSON(JSONObject json) {
+        List<Song> audios = null;
 
-            }
-        });
+        AudiosJSONParser parser = new AudiosJSONParser(json);
+        try {
+            audios = parser.getAudios();
+        } catch (JSONException e) {
+            Log.d("json", e.getMessage());
+        }
+
+        return audios;
+    }
+
+    private void getAudios() {
+        final VKRequest request = new VKRequest("audio.get", VKParameters.from(VKApiConst.FIELDS, "id,owner_id,artist,title"));
+        request.secure = false;
+        request.useSystemLanguage = false;
+        request.executeWithListener(getAudioRequestListener);
+    }
+
+    private void editAudios(List<Song> audios) {
+        for (int i = 0; i < audios.size(); i++) {
+            final VKRequest request = new VKRequest("audio.edit", VKParameters.from("audio_id", "350528891", "owner_id", "155554727", "artist", "Light Club".toUpperCase(), "title", "Fahkeet".toUpperCase(), "genre_id", "18"));
+            request.secure = false;
+            request.useSystemLanguage = false;
+            request.executeWithListener(getAudioRequestListener);
+
+        }
     }
 }

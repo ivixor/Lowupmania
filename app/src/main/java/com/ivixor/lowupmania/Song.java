@@ -8,6 +8,7 @@ public class Song implements Serializable {
     private String ownerId;
     private String artist;
     private String title;
+    private String genreId;
 
     public Song(String id, String ownerId, String artist, String title) {
         this.id = id;

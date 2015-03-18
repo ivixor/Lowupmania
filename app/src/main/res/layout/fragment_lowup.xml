@@ -4,7 +4,7 @@
     android:layout_height="match_parent">
 
     <Button
-        android:id="@+id/get_audio_button"
+        android:id="@+id/button_get_audio"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -14,7 +14,7 @@
         android:layout_gravity="right" />
 
     <Button
-        android:id="@+id/low_button"
+        android:id="@+id/button_low"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -24,7 +24,7 @@
         android:layout_gravity="right" />
 
     <Button
-        android:id="@+id/up_button"
+        android:id="@+id/button_up"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
