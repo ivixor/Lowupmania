@@ -40,7 +40,7 @@ public class EditAudiosAsyncTask extends AsyncTask<List<Song>, Void, Void> {
 
         @Override
         public void attemptFailed(VKRequest request, int attemptNumber, int totalAttempts) {
-            Log.d("edit response", "attempt: " + current + request.response.toString());
+            Log.d("edit response", "attempt - " + current + " | " + request.response.toString());
         }
 
         @Override
@@ -68,7 +68,6 @@ public class EditAudiosAsyncTask extends AsyncTask<List<Song>, Void, Void> {
             sendRequest(failed);
             failed.clear();
         }
-
         Log.d("edit response", "" + (System.currentTimeMillis() - start));
 
         return null;
