@@ -63,8 +63,8 @@
       <file leaf-file-name="EditAudiosAsyncTask.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/ivixor/lowupmania/EditAudiosAsyncTask.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.7443478" vertical-offset="1987" max-vertical-offset="2688">
-              <caret line="117" column="31" selection-start-line="117" selection-start-column="31" selection-end-line="117" selection-end-column="31" />
+            <state vertical-scroll-proportion="0.8173913" vertical-offset="1987" max-vertical-offset="2688">
+              <caret line="119" column="24" selection-start-line="119" selection-start-column="24" selection-end-line="119" selection-end-column="24" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#550#556#0" expanded="true" />
@@ -2243,8 +2243,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/ivixor/lowupmania/EditAudiosAsyncTask.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.7443478" vertical-offset="1987" max-vertical-offset="2688">
-          <caret line="117" column="31" selection-start-line="117" selection-start-column="31" selection-end-line="117" selection-end-column="31" />
+        <state vertical-scroll-proportion="0.8173913" vertical-offset="1987" max-vertical-offset="2688">
+          <caret line="119" column="24" selection-start-line="119" selection-start-column="24" selection-end-line="119" selection-end-column="24" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#550#556#0" expanded="true" />
