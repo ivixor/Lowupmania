@@ -6,24 +6,34 @@ import android.app.LoaderManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
-import android.support.v4.util.SimpleArrayMap;
+import android.view.ActionMode;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+
 import java.util.List;
 
 
-public class AudiosListActivity extends ListActivity {
+public class AudiosListActivity extends ListActivity implements EditAudiosAsyncTask.AsyncResponseListener, RequestHandler.RequestHandlerListener {
 
-    private List<Song> songs;
+    private ListView listView;
+
+    private List<Song> audios;
     private SongsArrayAdapter mAdapter;
+
+    private EditAudiosAsyncTask editAudiosAsyncTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,11 +41,64 @@ public class AudiosListActivity extends ListActivity {
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
-        DataWrapper dw = (DataWrapper) getIntent().getSerializableExtra("songs");
-        songs = dw.getSongsData();
+        DataWrapper dw = (DataWrapper) getIntent().getSerializableExtra("audios");
+        audios = dw.getSongsData();
 
-        mAdapter = new SongsArrayAdapter(this, songs);
+        mAdapter = new SongsArrayAdapter(this, audios);
 
+        setUpProgressBar();
+
+        listView = getListView();
+        listView.setAdapter(mAdapter);
+        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+        listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+            @Override
+            public void onItemCheckedStateChanged(ActionMode actionMode, int i, long l, boolean b) {
+
+                final int checkedCount = listView.getCheckedItemCount();
+                actionMode.setTitle(checkedCount + " Selected");
+                //mAdapter.toggleSelection(position, menuItem);
+
+                getActionBar().setDisplayHomeAsUpEnabled(true);
+
+                Toast.makeText(getApplicationContext(), "" + i, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+                MenuInflater inflater = actionMode.getMenuInflater();
+                inflater.inflate(R.menu.menu_itemselector, menu);
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+                return false;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+                switch (menuItem.getItemId()) {
+                    case R.id.action_low:
+                        return true;
+                    case R.id.action_up:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode actionMode) {
+
+            }
+        });
+
+        editAudiosAsyncTask = new EditAudiosAsyncTask(this, audios);
+        editAudiosAsyncTask.delegate = this;
+    }
+
+    public void setUpProgressBar() {
         ProgressBar progressBar = new ProgressBar(this);
         progressBar.setLayoutParams(new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -43,18 +106,29 @@ public class AudiosListActivity extends ListActivity {
                         Gravity.CENTER)
         );
         progressBar.setIndeterminate(true);
+
         getListView().setEmptyView(progressBar);
-        getListView().setAdapter(mAdapter);
 
         ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
         root.addView(progressBar);
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.actions_audioslist, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            // Respond to the action bar's Up/Home button
+            case R.id.action_low:
+                editAudiosAsyncTask.execute(true);
+                return true;
+            case R.id.action_up:
+                editAudiosAsyncTask.execute(false);
+                return true;
             case android.R.id.home:
                 NavUtils.navigateUpFromSameTask(this);
                 return true;
@@ -66,16 +140,29 @@ public class AudiosListActivity extends ListActivity {
     protected void onListItemClick(ListView l, final View v, int position, long id) {
         //super.onListItemClick(l, v, position, id);
 
-        final Song song = (Song) l.getItemAtPosition(position);
+        /*final Song song = (Song) l.getItemAtPosition(position);
         v.animate().setDuration(2000).alpha(0)
                 .withEndAction(new Runnable() {
                     @Override
                     public void run() {
-                        songs.remove(song);
+                        audios.remove(song);
                         mAdapter.notifyDataSetChanged();
                         v.setAlpha(1);
                     }
-                });
+                });*/
+
+
+    }
+
+    @Override
+    public void onProcessFinished() {
+        RequestHandler handler = new RequestHandler(this);
+        handler.getAudios();
+    }
+
+    @Override
+    public void onRequestFinished(List<Song> audios) {
+        mAdapter.notifyDataSetChanged();
     }
 
     private class SongsArrayAdapter extends ArrayAdapter<Song> {

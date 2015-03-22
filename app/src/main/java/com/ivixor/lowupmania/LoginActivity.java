@@ -1,19 +1,14 @@
 package com.ivixor.lowupmania;
 
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Fragment;
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKScope;
@@ -22,10 +17,13 @@ import com.vk.sdk.VKSdkListener;
 import com.vk.sdk.VKUIHelper;
 import com.vk.sdk.api.VKError;
 import com.vk.sdk.dialogs.VKCaptchaDialog;
-import com.vk.sdk.util.VKUtil;
+
+import java.util.List;
 
 
-public class LoginActivity extends FragmentActivity implements LowupmaniaFragment.FooCallbacks, LogoutDialog.ResultListener {
+public class LoginActivity extends FragmentActivity implements LowupmaniaFragment.FooCallbacks,
+                                                               LogoutDialog.NoticeDialogListener,
+                                                               RequestHandler.RequestHandlerListener {
 
     private static String appId = "4828248";
     private static String tokenKey = "VK_ACCESS_TOKEN";
@@ -110,7 +108,7 @@ public class LoginActivity extends FragmentActivity implements LowupmaniaFragmen
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.lowupmania_actions, menu);
+        inflater.inflate(R.menu.actions_lowupmania, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -141,9 +139,23 @@ public class LoginActivity extends FragmentActivity implements LowupmaniaFragmen
     }
 
     @Override
-    public void onPositiveResult() {
+    public void onDialogPositiveResult(DialogFragment dialog) {
+        dialog.dismiss();
         VKSdk.logout();
         finish();
+    }
+
+    private void startAudiosListActivity(List<Song> audios) {
+        if (audios != null) {
+            Intent intent = new Intent(this, AudiosListActivity.class);
+            intent.putExtra("audios", new DataWrapper(audios));
+            startActivity(intent);
+        }
+    }
+
+    @Override
+    public void onRequestFinished(List<Song> audios) {
+        startAudiosListActivity(audios);
     }
 
     /*public static class LoginFragment extends Fragment {

@@ -18,9 +18,9 @@ public class AudiosJSONParser {
         this.audiosJson = json;
     }
 
-    public List<Song> getAudios() throws JSONException {
+    public List<Song> getAudiosList() throws JSONException {
 
-        List<Song> songs = new ArrayList<Song>();
+        List<Song> audios = new ArrayList<Song>();
 
         JSONObject response = audiosJson.getJSONObject("response");
         JSONArray items = response.getJSONArray("items");
@@ -36,14 +36,14 @@ public class AudiosJSONParser {
                         item.getString("artist"),
                         item.getString("title")
                 );
-                songs.add(i, song);
+                audios.add(i, song);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
 
-        Log.d("json", "" + songs.size());
+        Log.d("json", "" + audios.size());
 
-        return songs;
+        return audios;
     }
 }

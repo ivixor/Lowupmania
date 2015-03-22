@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
+import android.media.tv.TvContract;
 import android.os.Bundle;
 
 import com.vk.sdk.VKSdk;
@@ -12,16 +13,18 @@ import com.vk.sdk.VKSdk;
 
 public class LogoutDialog extends DialogFragment {
 
-    public interface ResultListener {
-        void onPositiveResult();
+    private NoticeDialogListener listener;
+
+    public interface NoticeDialogListener {
+        void onDialogPositiveResult(DialogFragment dialog);
     }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        final Activity activity = getActivity();
+        listener = (NoticeDialogListener) getActivity();
 
-        if (!(activity instanceof ResultListener)) {
+        if (!(listener instanceof NoticeDialogListener)) {
             throw new IllegalStateException("Activity must implement ResultListener interface.");
         }
 
@@ -31,7 +34,7 @@ public class LogoutDialog extends DialogFragment {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        ((LoginActivity) activity).onPositiveResult();
+                        listener.onDialogPositiveResult(LogoutDialog.this);
                     }
                 })
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
