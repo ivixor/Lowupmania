@@ -1,11 +1,13 @@
 package com.ivixor.lowupmania;
 
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.ListActivity;
 import android.app.LoaderManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -15,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -31,6 +34,7 @@ public class AudiosListActivity extends ListActivity implements EditAudiosAsyncT
     private ListView listView;
 
     private List<Song> audios;
+
     private SongsArrayAdapter mAdapter;
 
     private EditAudiosAsyncTask editAudiosAsyncTask;
@@ -57,6 +61,11 @@ public class AudiosListActivity extends ListActivity implements EditAudiosAsyncT
 
                 final int checkedCount = listView.getCheckedItemCount();
                 actionMode.setTitle(checkedCount + " Selected");
+
+                mAdapter.toggleSelection(i);
+
+                //listView.setItemChecked(i, true);
+
                 //mAdapter.toggleSelection(position, menuItem);
 
                 getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -90,7 +99,7 @@ public class AudiosListActivity extends ListActivity implements EditAudiosAsyncT
 
             @Override
             public void onDestroyActionMode(ActionMode actionMode) {
-
+                mAdapter.removeSelection();
             }
         });
 
@@ -107,7 +116,7 @@ public class AudiosListActivity extends ListActivity implements EditAudiosAsyncT
         );
         progressBar.setIndeterminate(true);
 
-        getListView().setEmptyView(progressBar);
+        //getListView().setEmptyView(progressBar);
 
         ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
         root.addView(progressBar);
@@ -140,6 +149,7 @@ public class AudiosListActivity extends ListActivity implements EditAudiosAsyncT
     protected void onListItemClick(ListView l, final View v, int position, long id) {
         //super.onListItemClick(l, v, position, id);
 
+        //v.setSelected(true);
         /*final Song song = (Song) l.getItemAtPosition(position);
         v.animate().setDuration(2000).alpha(0)
                 .withEndAction(new Runnable() {
@@ -150,8 +160,6 @@ public class AudiosListActivity extends ListActivity implements EditAudiosAsyncT
                         v.setAlpha(1);
                     }
                 });*/
-
-
     }
 
     @Override
@@ -167,12 +175,16 @@ public class AudiosListActivity extends ListActivity implements EditAudiosAsyncT
 
     private class SongsArrayAdapter extends ArrayAdapter<Song> {
 
+        private SparseBooleanArray selectedIDs;
+
         private class ViewHolder {
             TextView songName;
         }
 
         public SongsArrayAdapter(Context context, List<Song> objects) {
             super(context, R.layout.item_audio, objects);
+
+            selectedIDs = new SparseBooleanArray();
         }
 
         @Override
@@ -193,6 +205,33 @@ public class AudiosListActivity extends ListActivity implements EditAudiosAsyncT
             viewHolder.songName.setText(song.getArtist() + " - " + song.getTitle());
 
             return convertView;
+        }
+
+        public void toggleSelection(int position) {
+            selectView(position, !selectedIDs.get(position));
+        }
+
+        public void selectView(int position, boolean value) {
+            if (value) {
+                selectedIDs.put(position, value);
+            } else {
+                selectedIDs.delete(position);
+            }
+
+            notifyDataSetChanged();
+        }
+
+        public int getSelectedCount() {
+            return selectedIDs.size();
+        }
+
+        public SparseBooleanArray getSelectedIDs() {
+            return selectedIDs;
+        }
+
+        public void removeSelection() {
+            selectedIDs = new SparseBooleanArray();
+            notifyDataSetChanged();
         }
     }
 }
