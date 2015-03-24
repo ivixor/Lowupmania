@@ -69,13 +69,13 @@ public class LowupmaniaFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        getView().findViewById(R.id.button_get_audio).setOnClickListener(new View.OnClickListener() {
+        /*getView().findViewById(R.id.button_get_audio).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 RequestHandler handler = new RequestHandler(getActivity());
                 handler.getAudios();
             }
-        });
+        });*/
     }
 
 

@@ -2,7 +2,10 @@ package com.ivixor.lowupmania;
 
 import android.app.AlertDialog;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -21,9 +24,7 @@ import com.vk.sdk.dialogs.VKCaptchaDialog;
 import java.util.List;
 
 
-public class LoginActivity extends FragmentActivity implements LowupmaniaFragment.FooCallbacks,
-                                                               LogoutDialog.NoticeDialogListener,
-                                                               RequestHandler.RequestHandlerListener {
+public class LoginActivity extends FragmentActivity implements LogoutDialog.NoticeDialogListener, RequestHandler.RequestHandlerListener {
 
     private static String appId = "4828248";
     private static String tokenKey = "VK_ACCESS_TOKEN";
@@ -53,31 +54,38 @@ public class LoginActivity extends FragmentActivity implements LowupmaniaFragmen
         public void onReceiveNewToken(VKAccessToken newToken) {
             Log.d("vk", "on receive token");
             newToken.saveTokenToSharedPreferences(LoginActivity.this, tokenKey);
-            showLowupmania();
+            getAudiosList();
+            //showAudiosList();
         }
 
         @Override
         public void onAcceptUserToken(VKAccessToken token) {
             Log.d("vk", "accept token");
-            showLowupmania();
+            getAudiosList();
+            //showAudiosList();
         }
     };
+
+    private AudiosListFragment audiosListFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
+
+        audiosListFragment = new AudiosListFragment();
+
         VKUIHelper.onCreate(this);
 
-        VKSdk.initialize(sdkListener, appId); // VKSdk.initialize(sdkListener, appId, VKAccessToken.tokenFromSharedPreferences(this, tokenKey));
-
-        if (VKSdk.wakeUpSession()) {
-            //startLowupmaniaActivity();
-            showLowupmania();
-            return;
+        if (isOnline()) {
+            VKSdk.initialize(sdkListener, appId); // VKSdk.initialize(sdkListener, appId, VKAccessToken.tokenFromSharedPreferences(this, tokenKey));
+            if (VKSdk.wakeUpSession()) {
+                getAudiosList();
+                //showAudiosList();
+                return;
+            }
+            VKSdk.authorize(appScope);
         }
-
-        VKSdk.authorize(appScope);
     }
 
     @Override
@@ -97,19 +105,22 @@ public class LoginActivity extends FragmentActivity implements LowupmaniaFragmen
         super.onResume();
         VKUIHelper.onResume(this);
 
-        if (VKSdk.isLoggedIn()) {
-            //showLogout();
-            showLowupmania();
-        } else {
-            VKSdk.authorize(appScope);
+        if (isOnline()) {
+            if (VKSdk.isLoggedIn()) {
+                getAudiosList();
+                //showAudiosList();
+            } else {
+                VKSdk.authorize(appScope);
+            }
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.actions_lowupmania, menu);
-        return super.onCreateOptionsMenu(menu);
+        return true;
     }
 
     @Override
@@ -118,12 +129,15 @@ public class LoginActivity extends FragmentActivity implements LowupmaniaFragmen
             case R.id.action_logout:
                 LogoutDialog logoutDialog = new LogoutDialog();
                 logoutDialog.show(getFragmentManager(), "Logout");
-
                 return true;
+            case R.id.action_refresh:
+                if (isOnline()) {
+                    getAudiosList();
+                    return true;
+                }
             default:
                 return super.onOptionsItemSelected(item);
         }
-
     }
 
     private void showLowupmania() {
@@ -133,9 +147,16 @@ public class LoginActivity extends FragmentActivity implements LowupmaniaFragmen
                 .commit();
     }
 
-    @Override
-    public void foo() {
+    private void showAudiosList(List<Song> audios) {
+        audiosListFragment = new AudiosListFragment();
+        Bundle args = new Bundle();
+        args.putSerializable("audios", new DataWrapper(audios));
+        audiosListFragment.setArguments(args);
 
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container, audiosListFragment, "audios_list")
+                .commit();
     }
 
     @Override
@@ -145,79 +166,24 @@ public class LoginActivity extends FragmentActivity implements LowupmaniaFragmen
         finish();
     }
 
-    private void startAudiosListActivity(List<Song> audios) {
-        if (audios != null) {
-            Intent intent = new Intent(this, AudiosListActivity.class);
-            intent.putExtra("audios", new DataWrapper(audios));
-            startActivity(intent);
-        }
-    }
-
     @Override
     public void onRequestFinished(List<Song> audios) {
-        startAudiosListActivity(audios);
+        if (getFragmentManager().findFragmentByTag("audios_list") != null) {
+            audiosListFragment.updateData(audios);
+        } else {
+            showAudiosList(audios);
+        }
     }
 
-    /*public static class LoginFragment extends Fragment {
-        public LoginFragment() {
-            super();
-        }
+    private void getAudiosList() {
+        RequestHandler handler = new RequestHandler(this);
+        handler.getAudios();
+    }
 
-        @Nullable
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_login, container, false);
-        }
-
-        @Override
-        public void onActivityCreated(Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-            getView().findViewById(R.id.sign_in_button).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    VKSdk.authorize(appScope, true, false);
-                }
-            });
-
-            getView().findViewById(R.id.force_oauth_button).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    VKSdk.authorize(appScope, true, true);
-                }
-            });
-        }
-    }*/
-
-    /*public static class LogoutFragment extends Fragment {
-        public LogoutFragment() {
-            super();
-        }
-
-        @Nullable
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_logout, container, false);
-        }
-
-        @Override
-        public void onActivityCreated(Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-            getView().findViewById(R.id.continue_button).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    ((LoginActivity) getActivity()).startLowupmaniaActivity();
-                }
-            });
-
-            getView().findViewById(R.id.ic_logout).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    VKSdk.logout();
-                    if (!VKSdk.isLoggedIn()) {
-                        ((LoginActivity) getActivity()).showLogin();
-                    }
-                }
-            });
-        }
-    }*/
+    public boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
+    }
 }

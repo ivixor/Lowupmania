@@ -1,5 +1,6 @@
 package com.ivixor.lowupmania;
 
+import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;

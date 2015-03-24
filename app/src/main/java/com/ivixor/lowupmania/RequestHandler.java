@@ -24,8 +24,8 @@ public class RequestHandler {
 
     private RequestHandlerListener listener = null;
 
-    public RequestHandler(Activity activity) {
-        this.listener = (RequestHandlerListener) activity;
+    public RequestHandler(Context context) {
+        this.listener = (RequestHandlerListener) context;
     }
 
     public void getAudios() {
