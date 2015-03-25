@@ -10,11 +10,12 @@
     <string name="action_sign_in_short">short</string>
     <string name="action_sign_in_force">force</string>
     <string name="continue_using_app">continue</string>
-    <string name="logout">logout</string>
+    <string name="logout">Logout</string>
 
-    <string name="get">get audio</string>
-    <string name="low">low it</string>
-    <string name="up">up it</string>
+    <string name="get">Get audio</string>
+    <string name="low">Low it</string>
+    <string name="up">Up it</string>
+    <string name="refresh">Refresh</string>
 
     <string name="song_name"></string>
 </resources>

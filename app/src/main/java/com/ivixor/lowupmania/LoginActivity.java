@@ -168,8 +168,10 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
 
     @Override
     public void onRequestFinished(List<Song> audios) {
-        if (getFragmentManager().findFragmentByTag("audios_list") != null) {
-            audiosListFragment.updateData(audios);
+        AudiosListFragment frag =
+                (AudiosListFragment) getFragmentManager().findFragmentByTag("audios_list");
+        if (frag != null) {
+            frag.updateData(audios);
         } else {
             showAudiosList(audios);
         }

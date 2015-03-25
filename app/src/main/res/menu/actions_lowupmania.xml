@@ -1,15 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/action_logout"
-        android:icon="@drawable/ic_logout"
-        android:title="@string/logout"
-        android:showAsAction="ifRoom"
-        android:orderInCategory="9999" />
+    <item android:icon="@drawable/ic_launcher"
+        android:id="@+id/action_overflow"
+        android:title="@string/action_overflow"
+        android:showAsAction="always"
+        android:orderInCategory="9999">
 
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
-        android:showAsAction="never"
-        android:orderInCategory="9999" />
+        <menu>
+
+            <item android:id="@+id/action_refresh"
+                android:icon="@drawable/ic_refresh"
+                android:title="@string/refresh"
+                android:showAsAction="ifRoom" />
+
+            <item android:id="@+id/action_logout"
+                android:icon="@drawable/ic_logout"
+                android:title="@string/logout"
+                android:showAsAction="ifRoom"
+                android:orderInCategory="9999" />
+
+            <item android:id="@+id/action_settings"
+                android:title="@string/action_settings"
+                android:showAsAction="never"
+                android:orderInCategory="9999" />
+
+        </menu>
+
+    </item>
+
+
 
 </menu>

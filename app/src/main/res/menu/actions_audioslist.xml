@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/action_refresh"
-        android:icon="@drawable/ic_refresh"
-        android:title="@string/low"
-        android:showAsAction="ifRoom" />
-
     <item android:id="@+id/action_low"
         android:icon="@drawable/ic_low"
         android:title="@string/low"
