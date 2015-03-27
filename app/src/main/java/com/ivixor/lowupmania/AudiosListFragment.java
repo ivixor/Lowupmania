@@ -4,8 +4,16 @@ package com.ivixor.lowupmania;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.ListFragment;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -29,12 +37,12 @@ import java.util.List;
 
 public class AudiosListFragment extends ListFragment implements EditAudiosAsyncTask.AsyncResponseListener {
 
+    public final static String TAG = "AudiosListFragment";
+
     private ListView listView;
 
     private List<Song> audios;
     private AudiosArrayAdapter mAdapter;
-
-    private EditAudiosAsyncTask editAudiosAsyncTask;
 
     public AudiosListFragment() {
     }
@@ -76,6 +84,7 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
                     case R.id.action_low:
                         int checked1 = listView.getCheckedItemCount();
                         Toast.makeText(getActivity(), "low " + checked1, Toast.LENGTH_SHORT).show();
+                        //service.doWork(audios, true);
                         return true;
                     case R.id.action_up:
                         int checked2 = listView.getCheckedItemCount();
@@ -92,8 +101,9 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
             }
         });
 
-        editAudiosAsyncTask = new EditAudiosAsyncTask(getActivity(), audios);
-        editAudiosAsyncTask.delegate = this;
+        //editAudiosAsyncTask = new EditAudiosAsyncTask(getActivity(), audios);
+        //editAudiosAsyncTask.delegate = this;
+        ((LoginActivity) getActivity()).bind();
 
         setHasOptionsMenu(true);
     }
@@ -110,22 +120,26 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
         inflater.inflate(R.menu.actions_audioslist, menu);
     }
 
-    //@Override
-    //public void onListItemClick(ListView l, View v, int position, long id) {
-        //super.onListItemClick(l, v, position, id);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_low:
+                Toast.makeText(getActivity(), "low", Toast.LENGTH_SHORT).show();
+                ((LoginActivity) getActivity()).editAudios(audios, true);
+                return true;
+            case R.id.action_up:
+                Toast.makeText(getActivity(), "up", Toast.LENGTH_SHORT).show();
+                ((LoginActivity) getActivity()).cancel();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
-        //v.setSelected(true);
-        /*final Song song = (Song) l.getItemAtPosition(position);
-        v.animate().setDuration(2000).alpha(0)
-                .withEndAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        audios.remove(song);
-                        mAdapter.notifyDataSetChanged();
-                        v.setAlpha(1);
-                    }
-                });*/
-    //}
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        //super.onListItemClick(l, v, position, id);
+    }
 
     @Override
     public void onProcessFinished() {
@@ -137,7 +151,9 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
         mAdapter.notifyDataSetChanged();
     }
 
-    public void setUpProgressBar() {
+
+
+    private void setupProgressBar() {
         ProgressBar progressBar = new ProgressBar(getActivity());
         progressBar.setLayoutParams(new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -151,6 +167,8 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
         //ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
         //root.addView(progressBar);
     }
+
+
 
     private class AudiosArrayAdapter extends ArrayAdapter<Song> {
 

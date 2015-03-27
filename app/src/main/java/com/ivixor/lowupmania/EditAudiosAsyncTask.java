@@ -44,11 +44,6 @@ public class EditAudiosAsyncTask extends AsyncTask<Boolean, Integer, Void> {
 
     private String err = null;
 
-    private ProgressDialog progressDialog;
-    private boolean showProgress;
-
-    private boolean isRequestDone = false;
-
     public interface AsyncResponseListener {
         void onProcessFinished();
     }
@@ -60,35 +55,13 @@ public class EditAudiosAsyncTask extends AsyncTask<Boolean, Integer, Void> {
         this.audios = audios;
     }
 
-    public void startProgressDialog() {
-        progressDialog = new ProgressDialog(context);
-        progressDialog.setCancelable(true);
-        progressDialog.setMessage("Downloading file(s)...");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.setProgress(0);
-        progressDialog.setMax(100);
-    }
+
 
     @Override
     protected Void doInBackground(Boolean... params) {
 
         if (!isCancelled()) {
-            boolean toLower = params[0];
 
-            long start = System.currentTimeMillis();
-
-            showProgress = true;
-
-            sendRequest(toLower);
-            //sendTestRequest(audios);
-
-            /*while (isError) {
-                err = "reedit is needed";
-                isError = false;
-                sendRequest(failed);
-                failed.clear();
-            }*/
-            Log.d("edit response", "" + (System.currentTimeMillis() - start));
         }
 
         return null;
@@ -97,7 +70,6 @@ public class EditAudiosAsyncTask extends AsyncTask<Boolean, Integer, Void> {
     @Override
     protected void onPreExecute() {
         failed = new ArrayList<Song>();
-        startProgressDialog();
     }
 
     @Override
@@ -117,66 +89,8 @@ public class EditAudiosAsyncTask extends AsyncTask<Boolean, Integer, Void> {
 
     @Override
     protected void onProgressUpdate(Integer... progress) {
-        if (showProgress) {
-            if (!progressDialog.isShowing()) {
-                progressDialog.show();
-            }
 
-            progressDialog.setProgress(progress[0]);
-            progressDialog.setMessage("Loading " + (audio.getArtist()) + " - " + audio.getTitle());
-
-            if (progressDialog.getProgress() >= 100) {
-                progressDialog.setProgress(100);
-                progressDialog.setMessage("Done!");
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    public void run() {
-                        progressDialog.dismiss();
-                    }
-                }, 1000);
-
-                showProgress = false;
-            }
-        }
     }
 
-    private void sendRequest(boolean toLower) {
-        if (audios == null || audios.isEmpty()) {
-            return;
-        }
 
-        for (int i = 0; i < audios.size(); i++) {
-            audio = audios.get(i);
-
-            String artist;
-            String title;
-
-            if (toLower) {
-                artist = audio.getArtist().toLowerCase();
-                title = audio.getTitle().toLowerCase();
-            } else {
-                artist = audio.getArtist().toUpperCase();
-                title = audio.getTitle().toUpperCase();
-            }
-
-            final VKRequest request = new VKRequest("audio.edit", VKParameters.from(
-                    "audio_id", audio.getId(),
-                    "owner_id", audio.getOwnerId(),
-                    "artist", artist,
-                    "title", title)
-            );
-
-            request.useSystemLanguage = false;
-            request.attempts = 0;
-
-            VKJsonOperation operation = (VKJsonOperation) request.getOperation();
-            operation.start();
-            String response = operation.getResponseJson().toString();
-            Log.d("edit response", i + " - " + response);
-
-            publishProgress(((i + 1) * 100) / audios.size());
-
-            Utils.pause(300);
-        } // https://api.vk.com/method/audio.edit?aid=' + aid + '&owner_id' + owner_id + '&artist=' + artist + '&title=' + '&no_search=' + 0 + '&access_token=' + accToken
-    }
 }
