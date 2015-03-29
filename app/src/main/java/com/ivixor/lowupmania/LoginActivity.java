@@ -39,7 +39,7 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
 
     public final static String TAG = "LoginActivity";
 
-    public final static String EDIT_SUCCESS = "success";
+    public final static String EDIT_FINISH = "finish";
     public final static String EDIT_CANCEL = "cancel";
 
     private static String appId = "4828248";
@@ -91,12 +91,10 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals(EDIT_SUCCESS)) {
-                String msg = intent.getStringExtra("message");
-                Log.d(TAG, msg);
+            if (action.equals(EDIT_FINISH)) {
+                onProcessFinished();
             } else if (action.equals(EDIT_CANCEL)) {
-                cancel();
-                Log.d(TAG, "on cancel click");
+                onProcessCancelled();
                 Toast.makeText(LoginActivity.this, "on cancel click", Toast.LENGTH_SHORT).show();
             }
         }
@@ -232,8 +230,7 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
             }
         };
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
-                new IntentFilter("finish-event"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(LoginActivity.EDIT_FINISH));
         //LocalBroadcastManager.getInstance(this).registerReceiver(mCancelEditReceiver, null);
     }
 
@@ -255,8 +252,13 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
         service.doWork(audios, toLower);
     }
 
-    public void cancel() {
+    public void onProcessCancelled() {
         service.cancel();
+    }
+
+    public void onProcessFinished() {
+        ((AudiosListFragment) getFragmentManager().findFragmentById(R.id.container))
+                .dismissProgressDialog();
         audiosListFragment.toggleActions(false);
     }
 }

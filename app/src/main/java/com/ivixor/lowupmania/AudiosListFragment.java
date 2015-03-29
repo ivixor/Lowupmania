@@ -150,7 +150,6 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
                 return true;
             case R.id.action_up:
                 Toast.makeText(getActivity(), "up", Toast.LENGTH_SHORT).show();
-                ((LoginActivity) getActivity()).cancel();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -174,11 +173,14 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
         mAdapter.notifyDataSetChanged();
     }
 
-
-    private void showProgressBar() {
+    public void dismissProgressDialog() {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
+    }
+
+    private void showProgressBar() {
+        dismissProgressDialog();
 
         progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel",
                 "Editing...", true, true,

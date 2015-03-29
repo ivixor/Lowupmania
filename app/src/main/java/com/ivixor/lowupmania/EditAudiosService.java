@@ -10,6 +10,7 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -64,15 +65,25 @@ public class EditAudiosService extends Service {
     }
 
     public void cancel() {
-        Log.d(TAG, "cancelled");
-        done();
         isCancelled = true;
+        //done(LoginActivity.EDIT_CANCEL);
         mNotificationManager.cancel(NOTIFICATION_ID);
+    }
+
+    private void done() {
+        Intent finishIntent = new Intent();
+        if (!isCancelled) {
+            finishNotification("Editing complete");
+        } else {
+            finishNotification("Editing cancelled");
+        }
+        finishIntent.setAction(LoginActivity.EDIT_FINISH);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(finishIntent);
     }
 
     private void setupNotification() {
         //Intent cancelIntent = new Intent(this, LoginActivity.class);
-        Intent cancelIntent = new Intent("cancel-event");
+        Intent cancelIntent = new Intent();
         cancelIntent.setAction(LoginActivity.EDIT_CANCEL);
         PendingIntent pendingCancelIntent = PendingIntent.getBroadcast(this, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -111,26 +122,24 @@ public class EditAudiosService extends Service {
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 
-    /*public void startProgressDialog() {
-        progressDialog = new ProgressDialog(getApplicationContext());
-        progressDialog.setCancelable(true);
-        progressDialog.setMessage("Downloading file(s)...");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.setProgress(0);
-        progressDialog.setMax(100);
-
-
-    }*/
-
     private boolean isEdited(String data, boolean toLower) {
         if (toLower) {
-            return !data.equals(data.toUpperCase());
+            return !hasUpperCase(data);
         } else {
-            return !data.equals(data.toLowerCase());
+            return !hasLowerCase(data);
         }
     }
 
+    private boolean hasLowerCase(String data) {
+        return data.matches(".*\\p{Ll}+.*");
+    }
+
+    private boolean hasUpperCase(String data) {
+        return data.matches(".*\\p{Lu}+.*");
+    }
+
     public List<Song> filterAudios(List<Song> audios, boolean toLower) {
+        Log.d(TAG, "size: " + audios.size());
         List<Song> filteredAudios = new ArrayList<Song>();
         Song audio;
         for (int i = 0; i < audios.size(); i++) {
@@ -141,6 +150,7 @@ public class EditAudiosService extends Service {
             }
         }
 
+        Log.d(TAG, "size: " + filteredAudios.size());
         return filteredAudios;
     }
 
@@ -148,13 +158,10 @@ public class EditAudiosService extends Service {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                //audios = data;
                 audios = filterAudios(data, toLower);
 
                 long start = System.currentTimeMillis();
                 showProgress = true;
-
-                //startProgressDialog();
 
                 setupNotification();
 
@@ -166,12 +173,9 @@ public class EditAudiosService extends Service {
                 sendRequest(failed);
                 failed.clear();
             }*/
-                if (!isCancelled) {
-                    finishNotification("Editing complete");
-                }
+                done();
 
                 Log.d("edit response", "" + (System.currentTimeMillis() - start));
-                done();
             }
         }).start();
     }
@@ -219,37 +223,6 @@ public class EditAudiosService extends Service {
 
         // https://api.vk.com/method/audio.edit?aid=' + aid + '&owner_id' + owner_id + '&artist=' + artist + '&title=' + '&no_search=' + 0 + '&access_token=' + accToken
     }
-
-    private void done() {
-        Log.d("sender", "Broadcasting message");
-        Intent intent = new Intent("finish-event");
-        intent.putExtra("message", "work is done");
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-    }
-
-    /*private void publishProgress(int progress, Song audio) {
-        if (showProgress) {
-            if (!progressDialog.isShowing()) {
-                progressDialog.show();
-            }
-
-            progressDialog.setProgress(progress);
-            progressDialog.setMessage("Loading " + (audio.getArtist()) + " - " + audio.getTitle());
-
-            if (progressDialog.getProgress() >= 100) {
-                progressDialog.setProgress(100);
-                progressDialog.setMessage("Done!");
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    public void run() {
-                        progressDialog.dismiss();
-                    }
-                }, 1000);
-
-                showProgress = false;
-            }
-        }
-    }*/
 
     private String changeCasing(String data, boolean toLower) {
         return toLower ? data.toLowerCase() : data.toUpperCase();
