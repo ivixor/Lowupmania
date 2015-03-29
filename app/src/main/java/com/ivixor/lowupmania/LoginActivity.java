@@ -15,9 +15,12 @@ import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,7 +39,8 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
 
     public final static String TAG = "LoginActivity";
 
-    public final static int CANCEL_EDITING = 1;
+    public final static String EDIT_SUCCESS = "success";
+    public final static String EDIT_CANCEL = "cancel";
 
     private static String appId = "4828248";
     private static String tokenKey = "VK_ACCESS_TOKEN";
@@ -66,13 +70,13 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
         public void onReceiveNewToken(VKAccessToken newToken) {
             Log.d("vk", "on receive token");
             newToken.saveTokenToSharedPreferences(LoginActivity.this, tokenKey);
-            getAudiosList();
+            showAudiosList();
+            //getAudiosList();
         }
 
         @Override
         public void onAcceptUserToken(VKAccessToken token) {
             Log.d("vk", "accept token");
-            //getAudiosList();
         }
     };
 
@@ -86,16 +90,15 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String msg = intent.getStringExtra("message");
-            Log.d(TAG, msg);
-        }
-    };
-
-    private BroadcastReceiver mCancelEditReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            service.cancel();
-            Toast.makeText(LoginActivity.this, "on cancel click", Toast.LENGTH_SHORT).show();
+            String action = intent.getAction();
+            if (action.equals(EDIT_SUCCESS)) {
+                String msg = intent.getStringExtra("message");
+                Log.d(TAG, msg);
+            } else if (action.equals(EDIT_CANCEL)) {
+                cancel();
+                Log.d(TAG, "on cancel click");
+                Toast.makeText(LoginActivity.this, "on cancel click", Toast.LENGTH_SHORT).show();
+            }
         }
     };
 
@@ -113,7 +116,8 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
         if (isOnline()) {
             VKSdk.initialize(sdkListener, appId); // VKSdk.initialize(sdkListener, appId, VKAccessToken.tokenFromSharedPreferences(this, tokenKey));
             if (VKSdk.wakeUpSession()) {
-                getAudiosList();
+                //showAudiosList();
+                //getAudiosList();
                 return;
             }
             VKSdk.authorize(appScope);
@@ -121,22 +125,9 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        //super.onActivityResult(requestCode, resultCode, data);
-        VKUIHelper.onActivityResult(this, requestCode, resultCode, data);
-
-        if (requestCode == CANCEL_EDITING) {
-            if (resultCode == RESULT_OK) {
-                service.cancel();
-                Toast.makeText(LoginActivity.this, "on cancel click", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    @Override
     protected void onDestroy() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mCancelEditReceiver);
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(mCancelEditReceiver);
         unbind();
         super.onDestroy();
         VKUIHelper.onDestroy(this);
@@ -149,8 +140,8 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
 
         if (isOnline()) {
             if (VKSdk.isLoggedIn()) {
-                getAudiosList();
-                //showAudiosList();
+                showAudiosList();
+                //getAudiosList();
             } else {
                 VKSdk.authorize(appScope);
             }
@@ -182,15 +173,15 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
         }
     }
 
-    private void showAudiosList(List<Song> audios) {
+    private void showAudiosList() {
         audiosListFragment = new AudiosListFragment();
-        Bundle args = new Bundle();
-        args.putSerializable("audios", new DataWrapper(audios));
-        audiosListFragment.setArguments(args);
+        //Bundle args = new Bundle();
+        //args.putSerializable("audios", new DataWrapper(audios));
+        //audiosListFragment.setArguments(args);
 
         getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.container, audiosListFragment, "audios_list")
+                .replace(R.id.container, audiosListFragment)
                 .commit();
     }
 
@@ -203,16 +194,15 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
 
     @Override
     public void onRequestFinished(List<Song> audios) {
-        AudiosListFragment frag =
-                (AudiosListFragment) getFragmentManager().findFragmentByTag("audios_list");
+
+        AudiosListFragment frag = (AudiosListFragment) getFragmentManager()
+                        .findFragmentById(R.id.container);
         if (frag != null) {
             frag.updateData(audios);
-        } else {
-            showAudiosList(audios);
         }
     }
 
-    private void getAudiosList() {
+    public void getAudiosList() {
         RequestHandler handler = new RequestHandler(this);
         handler.getAudios();
     }
@@ -244,7 +234,7 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
                 new IntentFilter("finish-event"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(mCancelEditReceiver, null);
+        //LocalBroadcastManager.getInstance(this).registerReceiver(mCancelEditReceiver, null);
     }
 
     public void bind() {
@@ -261,10 +251,12 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
     }
 
     public void editAudios(List<Song> audios, boolean toLower) {
+        audiosListFragment.toggleActions(true);
         service.doWork(audios, toLower);
     }
 
     public void cancel() {
         service.cancel();
+        audiosListFragment.toggleActions(false);
     }
 }

@@ -4,12 +4,15 @@ package com.ivixor.lowupmania;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.ListFragment;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
@@ -32,6 +35,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKParameters;
+import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.httpClient.VKJsonOperation;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,10 +47,15 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
 
     public final static String TAG = "AudiosListFragment";
 
+    private LinearLayout progressBarView;
     private ListView listView;
 
     private List<Song> audios;
     private AudiosArrayAdapter mAdapter;
+
+    private ProgressDialog progressDialog;
+
+    private boolean disableActions = false;
 
     public AudiosListFragment() {
     }
@@ -51,13 +64,18 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        DataWrapper dw = (DataWrapper) getArguments().getSerializable("audios");
-        audios = dw.getAudiosData();
+        setHasOptionsMenu(true);
+
+        //DataWrapper dw = (DataWrapper) getArguments().getSerializable("audios");
+        //audios = dw.getAudiosData();
+
+        audios = new ArrayList<Song>();
 
         mAdapter = new AudiosArrayAdapter(getActivity(), audios);
 
+        //progressBarView = (LinearLayout) getView().findViewById(R.id.view_progressbar);
+
         listView = getListView();
-        listView.setAdapter(mAdapter);
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
             @Override
@@ -101,11 +119,11 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
             }
         });
 
-        //editAudiosAsyncTask = new EditAudiosAsyncTask(getActivity(), audios);
-        //editAudiosAsyncTask.delegate = this;
-        ((LoginActivity) getActivity()).bind();
 
-        setHasOptionsMenu(true);
+        listView.setAdapter(mAdapter);
+
+        ((LoginActivity) getActivity()).bind();
+        ((LoginActivity) getActivity()).getAudiosList();
     }
 
     @Override
@@ -118,6 +136,8 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.actions_audioslist, menu);
+        menu.findItem(R.id.action_low).setEnabled(!disableActions).setVisible(!disableActions);
+        menu.findItem(R.id.action_up).setEnabled(!disableActions).setVisible(!disableActions);
     }
 
     @Override
@@ -125,6 +145,7 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
         switch (item.getItemId()) {
             case R.id.action_low:
                 Toast.makeText(getActivity(), "low", Toast.LENGTH_SHORT).show();
+                showProgressBar();
                 ((LoginActivity) getActivity()).editAudios(audios, true);
                 return true;
             case R.id.action_up:
@@ -148,27 +169,32 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
 
     public void updateData(List<Song> audios) {
         this.audios = audios;
+        mAdapter.clear();
+        mAdapter.addAll(audios);
         mAdapter.notifyDataSetChanged();
     }
 
 
+    private void showProgressBar() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
 
-    private void setupProgressBar() {
-        ProgressBar progressBar = new ProgressBar(getActivity());
-        progressBar.setLayoutParams(new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        Gravity.CENTER)
+        progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel",
+                "Editing...", true, true,
+                new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialogInterface) {
+
+                    }
+                }
         );
-        progressBar.setIndeterminate(true);
-
-        //getListView().setEmptyView(progressBar);
-
-        //ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
-        //root.addView(progressBar);
     }
 
-
+    public void toggleActions(boolean disable) {
+        disableActions = disable;
+        getActivity().invalidateOptionsMenu();
+    }
 
     private class AudiosArrayAdapter extends ArrayAdapter<Song> {
 

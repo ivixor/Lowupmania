@@ -55,8 +55,6 @@ public class EditAudiosAsyncTask extends AsyncTask<Boolean, Integer, Void> {
         this.audios = audios;
     }
 
-
-
     @Override
     protected Void doInBackground(Boolean... params) {
 

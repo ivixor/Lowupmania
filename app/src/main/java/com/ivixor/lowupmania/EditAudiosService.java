@@ -1,12 +1,14 @@
 package com.ivixor.lowupmania;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.Service;
 import android.app.TaskStackBuilder;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
@@ -29,12 +31,13 @@ public class EditAudiosService extends Service {
 
     public final static String TAG = "EditAudiosService";
 
+    public final static int NOTIFICATION_ID = 42;
+
     private IBinder binder = new MyBinder();
 
     private List<Song> audios;
     private List<Song> failed;
 
-    private ProgressDialog progressDialog;
     private boolean showProgress = false;
     private boolean isCancelled = false;
 
@@ -62,13 +65,15 @@ public class EditAudiosService extends Service {
 
     public void cancel() {
         Log.d(TAG, "cancelled");
-        cancelNotification();
         done();
         isCancelled = true;
+        mNotificationManager.cancel(NOTIFICATION_ID);
     }
 
     private void setupNotification() {
-        Intent cancelIntent = new Intent(this, LoginActivity.class);
+        //Intent cancelIntent = new Intent(this, LoginActivity.class);
+        Intent cancelIntent = new Intent("cancel-event");
+        cancelIntent.setAction(LoginActivity.EDIT_CANCEL);
         PendingIntent pendingCancelIntent = PendingIntent.getBroadcast(this, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         mBuilder = new NotificationCompat.Builder(this)
@@ -90,41 +95,62 @@ public class EditAudiosService extends Service {
                 );
         mBuilder.setContentIntent(resultPendingIntent);
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        mNotificationManager.notify(0, mBuilder.build());
+        mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 
     private void updateNotification(int percentage, Song audio) {
-        mBuilder.setContentText("Editing " + audio.getArtist() + " - " + audio.getTitle());
+        mBuilder.setContentText(audio.getArtist() + " - " + audio.getTitle());
         mBuilder.setProgress(100, percentage, false);
-        mNotificationManager.notify(0, mBuilder.build());
+        mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 
-    private void finishNotification() {
-        mBuilder.setContentText("Editing complete");
+    private void finishNotification(String status) {
+        mBuilder.setContentText(status);
+        mBuilder.addAction(0, null, null);
         mBuilder.setProgress(0, 0, false);
-        mNotificationManager.notify(0, mBuilder.build());
+        mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 
-    private void cancelNotification() {
-        mBuilder.setContentText("Cancelled");
-        mBuilder.setProgress(0, 0, false);
-        mNotificationManager.notify(0, mBuilder.build());
-    }
-
-    public void startProgressDialog() {
+    /*public void startProgressDialog() {
         progressDialog = new ProgressDialog(getApplicationContext());
         progressDialog.setCancelable(true);
         progressDialog.setMessage("Downloading file(s)...");
         progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         progressDialog.setProgress(0);
         progressDialog.setMax(100);
+
+
+    }*/
+
+    private boolean isEdited(String data, boolean toLower) {
+        if (toLower) {
+            return !data.equals(data.toUpperCase());
+        } else {
+            return !data.equals(data.toLowerCase());
+        }
+    }
+
+    public List<Song> filterAudios(List<Song> audios, boolean toLower) {
+        List<Song> filteredAudios = new ArrayList<Song>();
+        Song audio;
+        for (int i = 0; i < audios.size(); i++) {
+            audio = audios.get(i);
+            if (!isEdited(audio.getArtist(), toLower)
+                    || !isEdited(audio.getTitle(), toLower)) {
+                filteredAudios.add(audio);
+            }
+        }
+
+        return filteredAudios;
     }
 
     public void doWork(final List<Song> data, final boolean toLower) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                audios = data;
+                //audios = data;
+                audios = filterAudios(data, toLower);
+
                 long start = System.currentTimeMillis();
                 showProgress = true;
 
@@ -133,7 +159,6 @@ public class EditAudiosService extends Service {
                 setupNotification();
 
                 sendRequest(toLower);
-                //sendTestRequest(audios);
 
             /*while (isError) {
                 err = "reedit is needed";
@@ -141,7 +166,10 @@ public class EditAudiosService extends Service {
                 sendRequest(failed);
                 failed.clear();
             }*/
-                finishNotification();
+                if (!isCancelled) {
+                    finishNotification("Editing complete");
+                }
+
                 Log.d("edit response", "" + (System.currentTimeMillis() - start));
                 done();
             }
@@ -199,7 +227,7 @@ public class EditAudiosService extends Service {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    private void publishProgress(int progress, Song audio) {
+    /*private void publishProgress(int progress, Song audio) {
         if (showProgress) {
             if (!progressDialog.isShowing()) {
                 progressDialog.show();
@@ -221,7 +249,7 @@ public class EditAudiosService extends Service {
                 showProgress = false;
             }
         }
-    }
+    }*/
 
     private String changeCasing(String data, boolean toLower) {
         return toLower ? data.toLowerCase() : data.toUpperCase();
