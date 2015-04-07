@@ -43,7 +43,7 @@ import com.vk.sdk.api.httpClient.VKJsonOperation;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AudiosListFragment extends ListFragment implements EditAudiosAsyncTask.AsyncResponseListener {
+public class AudiosListFragment extends ListFragment {
 
     public final static String TAG = "AudiosListFragment";
 
@@ -150,6 +150,8 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
                 return true;
             case R.id.action_up:
                 Toast.makeText(getActivity(), "up", Toast.LENGTH_SHORT).show();
+                showProgressBar();
+                ((LoginActivity) getActivity()).editAudios(audios, false);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -159,11 +161,6 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         //super.onListItemClick(l, v, position, id);
-    }
-
-    @Override
-    public void onProcessFinished() {
-        //setAdapter();
     }
 
     public void updateData(List<Song> audios) {
@@ -179,7 +176,7 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
         }
     }
 
-    private void showProgressBar() {
+    public void showProgressBar() {
         dismissProgressDialog();
 
         progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel",
@@ -191,6 +188,10 @@ public class AudiosListFragment extends ListFragment implements EditAudiosAsyncT
                     }
                 }
         );
+    }
+
+    public List<Song> getAudios() {
+        return audios;
     }
 
     public void toggleActions(boolean disable) {

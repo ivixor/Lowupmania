@@ -14,6 +14,16 @@
                 android:title="@string/refresh"
                 android:showAsAction="ifRoom" />
 
+            <item android:id="@+id/action_backup"
+                android:icon="@drawable/ic_launcher"
+                android:title="@string/action_backup"
+                android:showAsAction="ifRoom" />
+
+            <item android:id="@+id/action_restore"
+                android:icon="@drawable/ic_launcher"
+                android:title="@string/action_restore"
+                android:showAsAction="ifRoom" />
+
             <item android:id="@+id/action_logout"
                 android:icon="@drawable/ic_logout"
                 android:title="@string/logout"

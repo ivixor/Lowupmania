@@ -2,12 +2,15 @@ package com.ivixor.lowupmania;
 
 import android.app.AlertDialog;
 import android.app.DialogFragment;
+import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -32,10 +35,12 @@ import com.vk.sdk.VKUIHelper;
 import com.vk.sdk.api.VKError;
 import com.vk.sdk.dialogs.VKCaptchaDialog;
 
+import java.sql.SQLException;
 import java.util.List;
 
 
-public class LoginActivity extends FragmentActivity implements LogoutDialog.NoticeDialogListener, RequestHandler.RequestHandlerListener {
+public class LoginActivity extends FragmentActivity implements LogoutDialog.NoticeDialogListener,
+        RequestHandler.RequestHandlerListener, ExecuteQueryAsyncTask.AsyncResponseListener {
 
     public final static String TAG = "LoginActivity";
 
@@ -87,14 +92,16 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
     private ServiceConnection sc;
     private boolean isBound = false;
 
+    private AudiosDataSource datasource;
+
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action.equals(EDIT_FINISH)) {
-                onProcessFinished();
+                onEditFinished();
             } else if (action.equals(EDIT_CANCEL)) {
-                onProcessCancelled();
+                onEditCancelled();
                 Toast.makeText(LoginActivity.this, "on cancel click", Toast.LENGTH_SHORT).show();
             }
         }
@@ -124,8 +131,7 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
 
     @Override
     protected void onDestroy() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
-        //LocalBroadcastManager.getInstance(this).unregisterReceiver(mCancelEditReceiver);
+        unregisterReceiver(mMessageReceiver);
         unbind();
         super.onDestroy();
         VKUIHelper.onDestroy(this);
@@ -147,6 +153,11 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         MenuInflater inflater = getMenuInflater();
@@ -164,8 +175,14 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
             case R.id.action_refresh:
                 if (isOnline()) {
                     getAudiosList();
-                    return true;
                 }
+                return true;
+            case R.id.action_backup:
+                backupAudios();
+                return true;
+            case R.id.action_restore:
+                restoreAudios();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -192,7 +209,6 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
 
     @Override
     public void onRequestFinished(List<Song> audios) {
-
         AudiosListFragment frag = (AudiosListFragment) getFragmentManager()
                         .findFragmentById(R.id.container);
         if (frag != null) {
@@ -230,8 +246,10 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
             }
         };
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(LoginActivity.EDIT_FINISH));
-        //LocalBroadcastManager.getInstance(this).registerReceiver(mCancelEditReceiver, null);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(LoginActivity.EDIT_FINISH);
+        filter.addAction(LoginActivity.EDIT_CANCEL);
+        registerReceiver(mMessageReceiver, new IntentFilter(LoginActivity.EDIT_CANCEL));
     }
 
     public void bind() {
@@ -252,11 +270,44 @@ public class LoginActivity extends FragmentActivity implements LogoutDialog.Noti
         service.doWork(audios, toLower);
     }
 
-    public void onProcessCancelled() {
+    public void backupAudios() {
+        AudiosListFragment frag = (AudiosListFragment) getFragmentManager()
+                .findFragmentById(R.id.container);
+        if (frag != null) {
+            List<Song> audios = frag.getAudios();
+
+            if (audios != null) {
+                ExecuteQueryAsyncTask task = new ExecuteQueryAsyncTask(this, "backup");
+                task.setData(audios);
+                task.execute();
+            }
+        }
+    }
+
+    public void restoreAudios() {
+        //((AudiosListFragment) getFragmentManager().findFragmentById(R.id.container))
+        //        .showProgressBar();
+
+        ExecuteQueryAsyncTask task = new ExecuteQueryAsyncTask(this, "restore");
+        task.execute();
+    }
+
+    public void onQueryFinished(List<Song> values) {
+        AudiosListFragment frag = (AudiosListFragment) getFragmentManager()
+                .findFragmentById(R.id.container);
+        if (frag != null) {
+            frag.updateData(values);
+        }
+
+        //((AudiosListFragment) getFragmentManager().findFragmentById(R.id.container))
+        //        .dismissProgressDialog();
+    }
+
+    public void onEditCancelled() {
         service.cancel();
     }
 
-    public void onProcessFinished() {
+    public void onEditFinished() {
         ((AudiosListFragment) getFragmentManager().findFragmentById(R.id.container))
                 .dismissProgressDialog();
         audiosListFragment.toggleActions(false);

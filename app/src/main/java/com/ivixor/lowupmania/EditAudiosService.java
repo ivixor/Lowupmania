@@ -82,7 +82,6 @@ public class EditAudiosService extends Service {
     }
 
     private void setupNotification() {
-        //Intent cancelIntent = new Intent(this, LoginActivity.class);
         Intent cancelIntent = new Intent();
         cancelIntent.setAction(LoginActivity.EDIT_CANCEL);
         PendingIntent pendingCancelIntent = PendingIntent.getBroadcast(this, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -117,7 +116,7 @@ public class EditAudiosService extends Service {
 
     private void finishNotification(String status) {
         mBuilder.setContentText(status);
-        mBuilder.addAction(0, null, null);
+        //mBuilder.addAction(0, null, null);
         mBuilder.setProgress(0, 0, false);
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
